@@ -1,12 +1,12 @@
 {
-  "name": "procdgns",
+  "name": "pcgdgns",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "parcel src/index.html",
     "devDemon": "nodemon -w src -x 'NODE_ENV=production parcel src/index.html'",
-    "build": "parcel build src/index.html --public-url /procdgns/",
+    "build": "parcel build src/index.html --public-url /pcgdgns/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "predeploy": "rm -rf dist && npm run build",
     "deploy": "gh-pages -d dist"
@@ -17,5 +17,11 @@
     "lodash": "^4.17.15",
     "overprint": "^0.8.1",
     "rung": "^0.5.0"
+  },
+  "browserslist": [
+    "last 1 Chrome versions"
+  ],
+  "devDependencies": {
+    "gh-pages": "^2.1.1"
   }
 }

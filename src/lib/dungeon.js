@@ -2,6 +2,7 @@ import rung from "rung/src/rung";
 import { compact, times } from "lodash";
 import { rectangle, rectsIntersect, isOnMapEdge } from "./grid";
 import { drunkenWalk } from "./movement";
+import state from "../state";
 
 function digHorizontalPassage(tiles, x1, x2, y) {
   const start = Math.min(x1, x2);
@@ -40,20 +41,23 @@ const digDrunkenWalk = (x, y, tiles) => {
   }
 };
 
-export const generateDungeon = ({
+export const generateDungeon = async ({
   x,
   y,
   width,
   height,
   maxRoomCount,
   minRoomSize,
-  maxRoomSize
+  maxRoomSize,
+  callback = data => console.log(data)
 }) => {
   // fill the entire space with walls so we can dig it out later
   const { tiles } = rectangle(
     { x, y, width, height },
     { sprite: "WALL", blocking: true, opaque: true }
   );
+
+  await callback({ tiles, openTileIds: [] });
 
   const rng = rung();
   const rooms = [];
@@ -75,6 +79,10 @@ export const generateDungeon = ({
     if (!rooms.some(room => rectsIntersect(room, candidate))) {
       rooms[r] = candidate;
       roomTiles = { ...roomTiles, ...candidate.tiles };
+
+      await callback({ tiles: { ...tiles, ...roomTiles } });
+    } else {
+      await callback({ tiles: { ...tiles, ...roomTiles, ...candidate.tiles } });
     }
   }
 
@@ -87,10 +95,20 @@ export const generateDungeon = ({
 
       if (rng.boolean()) {
         digHorizontalPassage(tiles, prev.x, curr.x, curr.y);
+
+        await callback({ tiles: { ...tiles, ...roomTiles } });
+
         digVerticalPassage(tiles, prev.y, curr.y, prev.x);
+
+        await callback({ tiles: { ...tiles, ...roomTiles } });
       } else {
         digVerticalPassage(tiles, prev.y, curr.y, prev.x);
+
+        await callback({ tiles: { ...tiles, ...roomTiles } });
+
         digHorizontalPassage(tiles, prev.x, curr.x, curr.y);
+
+        await callback({ tiles: { ...tiles, ...roomTiles } });
       }
     }
 
@@ -102,6 +120,8 @@ export const generateDungeon = ({
   for (let i = 0; i < 1000; i++) {
     digLoc = digDrunkenWalk(digLoc.x, digLoc.y, processedTiles);
   }
+
+  await callback({ tiles: processedTiles });
 
   const openTileIds = Object.keys(processedTiles).filter(
     tileId => !processedTiles[tileId].blocking
